@@ -36,7 +36,7 @@
  */
 function maxArea(height) {
   if (height.length === 2 /** n=2直接返回容量即可 */)
-    return height[0] > height[1] ? height[1] : height[0]
+    return Math.min(height[1], height[0])
   let left = 0
   let right = height.length - 1
   let xLen = height.length // x轴长度 每次操作-1
@@ -44,39 +44,34 @@ function maxArea(height) {
   while (left < right) {
     xLen--
     let count = 0
-    if (height[left] >= height[right]) {
-      count = height[right] * xLen
-      right--
-    } else {
-      count = height[left] * xLen
-      left++
-    }
-    result = result > count ? result : count
+    count = Math.min(height[right], height[left]) * xLen
+    height[left] >= height[right] ? right-- : left++
+    result = Math.max(result, count)
   }
 
   return result
 }
-// console.log(maxArea([1, 1]))
-// console.log(maxArea([1, 8, 6, 2, 5, 4, 8, 3, 7]))
-// console.log(maxArea([1, 8, 6, 2, 5, 4, 8, 25, 7]))
+console.log(maxArea([1, 1, 1]))
+console.log(maxArea([1, 8, 6, 2, 5, 4, 8, 3, 7]))
+console.log(maxArea([1, 8, 6, 2, 5, 4, 8, 25, 7]))
 
 /**
  * 双循环 height过大会卡死
  */
-function maxAreaByCircle(height) {
-  if (height.length === 2 /** n=2直接返回容量即可 */)
-    return height[0] > height[1] ? height[1] : height[0]
-  let result = 0
-  for (let i = 0; i < height.length; i++) {
-    for (let j = i + 1; j < height.length; j++) {
-      const min = height[i] > height[j] ? height[j] : height[i]
-      const count = min * (j - i)
-      result = result > count ? result : count
-    }
-  }
-  return result
-}
+// function maxAreaByCircle(height) {
+//   if (height.length === 2 /** n=2直接返回容量即可 */)
+//     return height[0] > height[1] ? height[1] : height[0]
+//   let result = 0
+//   for (let i = 0; i < height.length; i++) {
+//     for (let j = i + 1; j < height.length; j++) {
+//       const min = height[i] > height[j] ? height[j] : height[i]
+//       const count = min * (j - i)
+//       result = result > count ? result : count
+//     }
+//   }
+//   return result
+// }
 
-console.log(maxAreaByCircle([1, 1]))
-console.log(maxAreaByCircle([1, 8, 6, 2, 5, 4, 8, 3, 7]))
-console.log(maxAreaByCircle([1, 8, 6, 2, 5, 4, 8, 25, 7]))
+// console.log(maxAreaByCircle([1, 1]))
+// console.log(maxAreaByCircle([1, 8, 6, 2, 5, 4, 8, 3, 7]))
+// console.log(maxAreaByCircle([1, 8, 6, 2, 5, 4, 8, 25, 7]))
