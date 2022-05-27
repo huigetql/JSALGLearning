@@ -43,12 +43,22 @@ var hanota = function (A, B, C) {
 hanota([2, 1, 0], [], [])
 // 移动行径
 // function hanoi(n, a, b, c) {
-// if (n === 1) {
+//   if (n === 1) {
+//     console.log(a, '=>', c)
+//     return
+//   }
+//   hanoi(n - 1, a, c, b)
 //   console.log(a, '=>', c)
-//   return
-// }
-// hanoi(n - 1, a, c, b)
-// console.log(a, '=>', c)
-// hanoi(n - 1, b, a, c)
+//   hanoi(n - 1, b, a, c)
 // }
 // hanoi(2, 'A', 'B', 'C')
+
+n = 1
+;(a) => c
+
+n = 2
+;(a) => b
+;(a) => c
+;(b) => c
+
+n = 3
