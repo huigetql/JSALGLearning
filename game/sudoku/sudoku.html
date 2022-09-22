@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script
+      type="text/javascript"
+      src="https://cdn.bootcss.com/vue/2.2.2/vue.min.js"
+    ></script>
+    <title>sudoku</title>
+  </head>
+  <body>
+    <div id="app">
+      <div class="input">
+        <input
+          type="text"
+          placeholder="回车后查询..."
+          v-model.trim="inputStr"
+          @change="checkInputList"
+        />
+        <button v-if="inputList.length" @click="checkClick">
+          {{isCheck ?'暂停':'检验'}}
+        </button>
+      </div>
+      <!-- 数独图 -->
+      <div class="diagram__origin">
+        <div>
+          <div class="base-row" v-for="row,rowIndex in inputList">
+            <div
+              class="base-column"
+              :class="{
+              'pedding' : rowIndex === currentRowIndex && columnIndex === currentColumnIndex,
+              'ending' : rowIndex === currentRowIndex && columnIndex === currentColumnIndex && isError
+            }"
+              v-for="column,columnIndex in row"
+            >
+              {{ column === '.' ? '' : column }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- 分析图 -->
+      <div class="diagram__analysis" v-if="isInit">
+        <!-- 行 -->
+        <div class="analysis__base">
+          <div style="margin-bottom: 12px">数字在行出现的次数</div>
+          <div class="base-row" v-for="row,index in rowList">
+            <div style="width: 50px; margin-right: 12px">第{{index+1}}行</div>
+            <div
+              class="base-column"
+              :class="{
+              'pedding' : column === 1,
+              'ending' : column > 1
+            }"
+              v-for="column,columnIndex in row"
+            >
+              {{ column }}
+              <div class="column__tips">{{columnIndex + 1}}</div>
+            </div>
+          </div>
+        </div>
+        <!-- 列 -->
+        <div class="analysis__base">
+          <div style="margin-bottom: 12px">数字在列出现的次数</div>
+          <div class="column__base">
+            <div v-for="row,index in columnList">
+              <div style="width: 12px; text-align: center; margin: 0 auto 12px">
+                第{{index+1}}列
+              </div>
+              <div
+                class="base-column"
+                :class="{
+                'pedding' : column === 1,
+                'ending' : column > 1
+              }"
+                v-for="column,columnIndex in row"
+              >
+                {{ column }}
+                <div class="column__tips">{{columnIndex + 1}}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 九宫格 -->
+        <div class="analysis__base">
+          <div style="margin-bottom: 12px">数字在九宫格出现的次数</div>
+          <div class="base-row" v-for="row in gridList">
+            <div
+              class="base-grid"
+              style="margin: 0 8px 8px 0"
+              v-for="column in row"
+            >
+              <div
+                :class="{
+                'pedding' : grid === 1,
+                'ending' : grid > 1
+              }"
+                v-for="grid,index in column"
+              >
+                {{ grid }}
+                <div class="column__tips">{{index + 1}}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script>
+    var app = new Vue({
+      el: '#app',
+      data: {
+        inputStr: '',
+        isInit: false,
+        isCheck: false,
+        isError: false,
+        timer: null,
+        inputList: [],
+        rowList: [],
+        columnList: [],
+        gridList: [],
+        currentRowIndex: 0,
+        currentColumnIndex: -1,
+      },
+      methods: {
+        checkClick() {
+          this.isCheck = !this.isCheck
+          if (!this.isCheck) {
+            clearInterval(this.timer)
+            return
+          }
+
+          this.timer = setInterval(this.checkSudoku.bind(this), 800)
+        },
+        checkSudoku() {
+          if (this.currentRowIndex === 8 && this.currentColumnIndex === 8) {
+            this.isCheck = false
+            clearInterval(this.timer)
+            alert('有效的数独！')
+            return
+          }
+          // 当前行完毕执行下一列
+          if (this.currentColumnIndex !== 8) this.currentColumnIndex++
+          else {
+            this.currentColumnIndex = 0
+            this.currentRowIndex++
+          }
+
+          // 检验
+          const { currentRowIndex, currentColumnIndex } = this
+
+          const num = this.inputList[currentRowIndex][currentColumnIndex]
+          if (num !== '.') {
+            const index = Number(num) - 1
+
+            // 第 currentRowIndex 行的 num 值 +！
+            this.rowList[currentRowIndex][index]++
+            // 第 currentRowIndex 列的 num 值 +！
+            this.columnList[currentColumnIndex][index]++
+            // 第 x 区域的 num 值 +1
+            this.gridList[Math.floor(currentRowIndex / 3)][
+              Math.floor(currentColumnIndex / 3)
+            ][index]++
+            this.$forceUpdate()
+            // 如果 第 currentRowIndex 行的 num 值的个数大于 1，则说明不满足要求，直接返回 false
+            // 如果 第 currentRowIndex 列的 num 值的个数大于 1，则说明不满足要求，直接返回 false
+            // 如果 第 x 区域的 num 值 的个数大于 1，则说明不满足要求，直接返回 false
+            if (
+              this.rowList[currentRowIndex][index] > 1 ||
+              this.columnList[currentColumnIndex][index] > 1 ||
+              this.gridList[Math.floor(currentRowIndex / 3)][
+                Math.floor(currentColumnIndex / 3)
+              ][index] > 1
+            ) {
+              this.isCheck = false
+              this.isError = true
+              clearInterval(this.timer)
+              alert('不是有效的数独！')
+              return
+            }
+          }
+        },
+        init() {
+          this.rowList = new Array(9).fill(0).map((i) => new Array(9).fill(0))
+          this.columnList = new Array(9)
+            .fill(0)
+            .map((i) => new Array(9).fill(0))
+          this.gridList = new Array(3)
+            .fill(0)
+            .map((i) => new Array(3).fill(0).map((j) => new Array(9).fill(0)))
+          this.isInit = true
+        },
+        clear() {
+          this.isInit = false
+          this.inputList = []
+          this.rowList = []
+          this.columnList = []
+          this.gridList = []
+        },
+        checkInputList() {
+          // 数据处理
+          try {
+            this.clear()
+            const list = this.inputStr
+              .replace(/ /g, '')
+              .replace(/^\[|\]$/g, '')
+              .split(/\[|\]/g)
+              .filter((i) => i !== ',' && i)
+              .map((i) => i.replace(/'/g, '').split(','))
+            console.log(list)
+            if (list.length !== 9 || list.some((i) => i.length !== 9)) {
+              alert('数据错误！')
+              return
+            }
+
+            this.inputList = list
+            this.init()
+          } catch (error) {
+            alert('数据错误！')
+          }
+        },
+      },
+    })
+  </script>
+
+  <style>
+    .input {
+      margin-top: 40px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .diagram__origin {
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+    }
+    .diagram__analysis {
+      display: flex;
+      justify-content: space-around;
+    }
+    .analysis__base {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .base-row {
+      display: flex;
+      align-items: center;
+    }
+    .base-column {
+      width: 36px;
+      height: 36px;
+      text-align: center;
+      line-height: 36px;
+      border: 1px solid #999;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    .base-grid {
+      width: 108px;
+      height: 108px;
+      display: flex;
+      flex-wrap: wrap;
+      margin: 0 8px 8px 0;
+    }
+    .base-grid > div {
+      width: 36px;
+      height: 36px;
+      text-align: center;
+      line-height: 36px;
+      border: 1px solid #999;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    .column__tips {
+      position: absolute;
+      bottom: -12px;
+      right: 0;
+      color: #999;
+      font-size: 10px;
+    }
+    .column__base {
+      display: flex;
+    }
+
+    .pedding {
+      background: skyblue;
+      color: #fff;
+    }
+    .ending {
+      background: orangered;
+      color: #fff;
+    }
+  </style>
+</html>
